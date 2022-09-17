@@ -40,7 +40,6 @@ public class FilmController {
         log.debug("Получен запрос POST /film.");
         if (!films.containsKey(film.getId())) {throw new UnknownIdException("Указан некорректный Id фильма");}
         checkReleaseDate(film);
-        if (film.getId() == null) {film.setId(generateNewFilmId());}
         films.put(film.getId(),film);
         return film;
     }

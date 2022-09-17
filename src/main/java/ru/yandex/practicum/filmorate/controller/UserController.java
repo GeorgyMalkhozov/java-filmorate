@@ -40,7 +40,6 @@ public class UserController {
         log.debug("Получен запрос PUT /user.");
         if (!users.containsKey(user.getId())) {throw new UnknownIdException("Указан некорректный Id пользователя");}
         validateUser(user);
-        if (user.getId() == null) {user.setId(generateNewUserId());}
         users.put(user.getId(),user);
         return user;
     }
