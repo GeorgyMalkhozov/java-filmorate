@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.IncorrectCountException;
 import ru.yandex.practicum.filmorate.exceptions.UnknownIdException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -34,6 +35,9 @@ public class FilmService{
     }
 
     public List<Film> getPopularFilms(int count) {
+        if (count <= 0) {
+            throw new IncorrectCountException("Параметр count должен быть положительным.");
+        }
         return filmStorage.findAll().stream()
                 .sorted(this::compare)
                 .limit(count)
