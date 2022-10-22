@@ -1,72 +1,71 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.UnknownIdException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private static int userIdGenerator;
-    private Map<Integer, User> users = new HashMap<>();
+    @Qualifier("inMemoryUserStorage")
+    private final UserService userService;
+    @Autowired
+    public UserController(UserService userService) {this.userService = userService;}
 
     @GetMapping
+    @ResponseBody
     public List<User> findAll() {
-        log.debug("Получен запрос GET /users.");
-        return new ArrayList<>(users.values());
+        log.debug("Получен запрос GET/users");
+        return userService.findAll();
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        log.debug("Получен запрос POST /user.");
-        validateUser(user);
-        user.setId(generateNewUserId());
-        users.put(user.getId(), user);
-        return user;
+        log.debug("Получен запрос POST/user");
+        return userService.create(user);
     }
 
     @PutMapping
     public User put(@Valid @RequestBody User user) {
-        log.debug("Получен запрос PUT /user.");
-        if (!users.containsKey(user.getId())) {throw new UnknownIdException("Указан некорректный Id пользователя");}
-        validateUser(user);
-        users.put(user.getId(),user);
-        return user;
+        log.debug("Получен запрос PUT/user");
+        return userService.put(user);
     }
 
-    private void validateUser(User user) {
-        checkLogin(user);
-        checkEmail(user);
-        if (user.getName() == null || user.getName().isBlank()) {user.setName(user.getLogin());}
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+        log.debug("Получен запрос на добавление лайка");
+        userService.addFriend(id, friendId);
     }
 
-    private void checkEmail(User user){
-        for (User value : users.values()) {
-            if (value.getEmail().equals(user.getEmail()) && (!value.getId().equals(user.getId()))) {
-                throw new ValidationException("Пользователь с электронной почтой " +
-                        user.getEmail() + " уже зарегистрирован.");
-            }
-        }
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void removeFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+        log.debug("Получен запрос на добавление лайка");
+        userService.deleteFriend(id,friendId);
     }
 
-    private void checkLogin(User user){
-        if (user.getLogin().contains(" ")){
-            throw new ValidationException("Логин пользователя не должен содержать пробелов");
-        }
+    @GetMapping("/{id}")
+    public User get(@PathVariable Integer id) {
+        log.debug("Получен запрос GET users/user.");
+        return userService.get(id);
     }
 
-    private int generateNewUserId(){
-        userIdGenerator++;
-        return userIdGenerator;
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getMutualFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
+        log.debug("Получен запрос GET /users/{id}/friends/common/{otherId}");
+        return userService.findMutual(id, otherId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable Integer id) {
+        log.debug("Получен запрос GET /users/{id}/friends");
+        return userService.findFriends(id);
     }
 }
