@@ -1,47 +1,43 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.UnknownIdException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.friends.FriendStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
-    @Qualifier("inMemoryUserStorage")
     private final UserStorage userStorage;
+    private final FriendStorage friendStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(UserStorage userStorage, FriendStorage friendStorage) {
         this.userStorage = userStorage;
+        this.friendStorage = friendStorage;
     }
 
     public void addFriend(Integer id ,Integer friendId) {
         checkUsersExist(id, friendId);
-        userStorage.get(id).addFriend(friendId);
-        userStorage.get(friendId).addFriend(id);
+        friendStorage.create(id,friendId);
     }
 
     public void deleteFriend(Integer id, Integer friendId) {
         checkUsersExist(id, friendId);
-       userStorage.get(id).deleteFriend(friendId);
-       userStorage.get(friendId).deleteFriend(id);
+        if (!friendStorage.isFriendshipExists(id, friendId)){
+            throw new UnknownIdException("Пользователи не являются друзьями. Проверьте id.");
+        }
+        friendStorage.delete(id,friendId);
     }
 
     public List<User> findMutual(Integer id, Integer otherId) {
         checkUsersExist(id, otherId);
-        final Set<Integer> mutualFriendsIds = new HashSet<>(userStorage.get(id).getFriends());
-        mutualFriendsIds.retainAll(userStorage.get(otherId).getFriends());
-        return mutualFriendsIds.stream()
-                .map(userStorage::get)
-                .collect(Collectors.toList());
+        return userStorage.findMutual(id, otherId);
     }
 
     public List<User> findAll() {
@@ -49,14 +45,18 @@ public class UserService {
     };
 
     public User create(User user) {
+        validateUser(user);
         return userStorage.create(user);
     };
 
     public User put(User user) {
+        userStorage.checkUserId(user.getId());
+        validateUser(user);
         return userStorage.put(user);
     };
 
     public User get(Integer id) {
+        userStorage.checkUserId(id);
         return userStorage.get(id);
     };
 
@@ -65,8 +65,28 @@ public class UserService {
     };
 
     private void checkUsersExist(Integer user1, Integer user2) {
-        if (userStorage.get(user1)==null || userStorage.get(user2)==null) {
-            throw new UnknownIdException("Указан некорректный Id пользователя");
+        userStorage.checkUserId(user1);
+        userStorage.checkUserId(user2);
+    }
+
+    private void validateUser(User user) {
+        checkLogin(user);
+    //    checkEmail(user);
+        if (user.getName() == null || user.getName().isBlank()) {user.setName(user.getLogin());}
+    }
+
+/*    private void checkEmail(User user){
+        for (User value : users.values()) {
+            if (value.getEmail().equals(user.getEmail()) && (!value.getId().equals(user.getId()))) {
+                throw new ValidationException("Пользователь с электронной почтой " +
+                        user.getEmail() + " уже зарегистрирован.");
+            }
+        }
+    }*/
+
+    private void checkLogin(User user){
+        if (user.getLogin().contains(" ")){
+            throw new ValidationException("Логин пользователя не должен содержать пробелов");
         }
     }
 }

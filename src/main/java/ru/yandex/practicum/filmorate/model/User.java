@@ -24,12 +24,14 @@ public class User {
 
     @NotEmpty
     private String login;
+
     private String name;
 
     @Past
     private LocalDate birthday;
+
     @JsonIgnore
-    private final Set<Integer> friends = new HashSet<>();
+    private Set<Integer> friends = new HashSet<>();
 
     public void addFriend(Integer userId){
         friends.add(userId);

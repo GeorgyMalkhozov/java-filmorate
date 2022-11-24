@@ -16,4 +16,8 @@ public interface UserStorage {
 
     public List<User> findFriends(Integer id);
 
+    public List<User> findMutual(Integer id, Integer otherId);
+
+    public void checkUserId(Integer id);
+
 }

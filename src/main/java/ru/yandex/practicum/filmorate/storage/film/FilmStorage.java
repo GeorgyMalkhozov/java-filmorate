@@ -13,4 +13,10 @@ public interface FilmStorage {
     public Film put(Film film);
 
     public Film get(Integer id);
+
+    public List<Film> getPopularFilms(int count);
+
+    public boolean isNewFilm(Film film);
+
+    public void checkFilmId(Integer id);
 }

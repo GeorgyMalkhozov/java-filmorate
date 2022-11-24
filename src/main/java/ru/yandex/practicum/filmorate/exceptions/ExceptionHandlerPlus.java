@@ -42,6 +42,13 @@ public class ExceptionHandlerPlus {
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler({SqlException.class})
+    protected ResponseEntity<Object> handleSqlException(SqlException exception, WebRequest request) {
+        log.error(exception.getMessage());
+        ApiError apiError = new ApiError("SqlException Exception", exception.getMessage());
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler({IncorrectCountException.class})
     protected ResponseEntity<Object> handleIncorrectCountException(IncorrectCountException exception,
                                                                    WebRequest request) {
