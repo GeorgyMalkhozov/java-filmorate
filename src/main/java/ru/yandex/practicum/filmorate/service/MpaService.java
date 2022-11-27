@@ -20,13 +20,13 @@ public class MpaService {
 
     public List<Mpa> findAll() {
         return mpaStorage.findAll();
-    };
+    }
 
     public Mpa create(Mpa mpa) {
         return mpaStorage.create(mpa);
-    };
+    }
 
     public Mpa get(Integer id) {
         return mpaStorage.get(id);
-    };
+    }
 }

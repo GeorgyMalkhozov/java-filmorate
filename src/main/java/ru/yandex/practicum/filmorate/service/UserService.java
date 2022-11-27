@@ -42,27 +42,28 @@ public class UserService {
 
     public List<User> findAll() {
         return userStorage.findAll();
-    };
+    }
 
     public User create(User user) {
         validateUser(user);
         return userStorage.create(user);
-    };
+    }
 
     public User put(User user) {
         userStorage.checkUserId(user.getId());
         validateUser(user);
         return userStorage.put(user);
-    };
+    }
 
     public User get(Integer id) {
         userStorage.checkUserId(id);
         return userStorage.get(id);
-    };
+    }
 
     public List<User> findFriends(Integer id) {
+        userStorage.checkUserId(id);
         return userStorage.findFriends(id);
-    };
+    }
 
     private void checkUsersExist(Integer user1, Integer user2) {
         userStorage.checkUserId(user1);
@@ -71,18 +72,11 @@ public class UserService {
 
     private void validateUser(User user) {
         checkLogin(user);
-    //    checkEmail(user);
+        if (!userStorage.isEmailAlreadyExist(user)) {throw new ValidationException("Такой email уже есть в базе");}
+        if (!userStorage.isLoginAlreadyExist(user)) {throw new ValidationException("Такой логин уже есть в базе");}
         if (user.getName() == null || user.getName().isBlank()) {user.setName(user.getLogin());}
-    }
 
-/*    private void checkEmail(User user){
-        for (User value : users.values()) {
-            if (value.getEmail().equals(user.getEmail()) && (!value.getId().equals(user.getId()))) {
-                throw new ValidationException("Пользователь с электронной почтой " +
-                        user.getEmail() + " уже зарегистрирован.");
-            }
-        }
-    }*/
+    }
 
     private void checkLogin(User user){
         if (user.getLogin().contains(" ")){

@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.Data;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -117,15 +118,16 @@ public class DatabaseFilmStorage implements FilmStorage {
     private void saveGenres(Film film) {
         jdbcTemplate.update("DELETE FROM FILM_GENRE WHERE FILM_ID = ?", film.getId());
         if (film.getGenres()==null) {return;}
-        for (Genre genre : film.getGenres()) {
-            String sql = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
-            jdbcTemplate.update(con -> {
-                PreparedStatement ps = con.prepareStatement(sql);
-                ps.setInt(1, film.getId());
-                ps.setInt(2, genre.getId());
-                return ps;
-            });
-        }
+        final List<Genre> genres = new ArrayList<>(film.getGenres());
+        jdbcTemplate.batchUpdate("INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)",
+            new BatchPreparedStatementSetter() {
+
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setInt(1, film.getId());
+                    ps.setInt(2, genres.get(i).getId());
+                }
+                public int getBatchSize() {return genres.size();}
+        });
     }
 
     @Override

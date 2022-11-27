@@ -20,13 +20,13 @@ public class GenreService {
 
     public List<Genre> findAll() {
         return genreStorage.findAll();
-    };
+    }
 
     public Genre create(Genre genre) {
         return genreStorage.create(genre);
-    };
+    }
 
     public Genre get(Integer id) {
         return genreStorage.get(id);
-    };
+    }
 }

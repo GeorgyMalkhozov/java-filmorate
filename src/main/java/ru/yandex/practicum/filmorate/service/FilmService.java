@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,13 +21,21 @@ public class FilmService{
     private final FilmStorage filmStorage;
     private final LikeStorage likeStorage;
 
+    private final UserStorage userStorage;
+
     @Autowired
-    public FilmService(FilmStorage filmStorage, LikeStorage likeStorage) {
+    public FilmService(FilmStorage filmStorage, LikeStorage likeStorage, UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.likeStorage = likeStorage;
+        this.userStorage = userStorage;
     }
 
     public void addLike(Integer filmId, Integer userId) {
+        filmStorage.checkFilmId(filmId);
+        userStorage.checkUserId(userId);
+        if (likeStorage.isLikeExists(filmId,userId)) {
+            throw new UnknownIdException("У фильма уже есть лайк от этого пользователя");
+        }
         likeStorage.create(filmId, userId);
     }
 
@@ -52,18 +61,18 @@ public class FilmService{
         checkReleaseDate(film);
         if (!filmStorage.isNewFilm(film)) {throw new ValidationException("Фильм уже есть в базе");}
         return filmStorage.create(film);
-    };
+    }
 
     public Film put(Film film) {
         filmStorage.checkFilmId(film.getId());
         checkReleaseDate(film);
         return filmStorage.put(film);
-    };
+    }
 
     public Film get(Integer id) {
         filmStorage.checkFilmId(id);
         return filmStorage.get(id);
-    };
+    }
 
     private void checkReleaseDate(Film film){
         if (film.getReleaseDate().isBefore(LocalDate.of(1895,12,28))) {

@@ -20,4 +20,7 @@ public interface UserStorage {
 
     public void checkUserId(Integer id);
 
+    public boolean isLoginAlreadyExist(User user);
+
+    public boolean isEmailAlreadyExist(User user);
 }

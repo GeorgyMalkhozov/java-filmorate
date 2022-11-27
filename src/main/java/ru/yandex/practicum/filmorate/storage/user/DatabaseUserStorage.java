@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.UnknownIdException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.friends.FriendStorage;
 
@@ -104,6 +105,24 @@ public class DatabaseUserStorage implements UserStorage{
         SqlRowSet userRows = jdbcTemplate.queryForRowSet("SELECT * " +
                 "FROM USERS U " +
                 "WHERE USER_ID = ?", id);
-        if(!userRows.next()) {throw new UnknownIdException("Указан некорректный Id фильма");}
+        if(!userRows.next()) {throw new UnknownIdException("Указан некорректный Id пользователя");}
+    }
+
+    @Override
+    public boolean isLoginAlreadyExist(User user){
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("SELECT * " +
+                        "FROM USERS U " +
+                        "WHERE NAME = ?",
+                user.getName());
+        return !filmRows.next();
+    }
+
+    @Override
+    public boolean isEmailAlreadyExist(User user){
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("SELECT * " +
+                        "FROM USERS U " +
+                        "WHERE EMAIL = ?",
+                user.getEmail());
+        return !filmRows.next();
     }
 }

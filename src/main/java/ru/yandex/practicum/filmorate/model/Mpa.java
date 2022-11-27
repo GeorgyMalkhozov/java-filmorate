@@ -16,7 +16,7 @@ public class Mpa {
 
     private Integer id;
 
-    @NotBlank
+    @NotBlank(message = "Название Mpa не должно быть пустым")
     @JsonIgnore
     private String name;
 }

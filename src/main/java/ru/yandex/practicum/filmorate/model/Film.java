@@ -18,26 +18,25 @@ public class Film {
 
     private Integer id;
 
-    @NotBlank
+    @NotBlank(message = "Название фильма не должно быть пустым")
     @EqualsAndHashCode.Include private String name;
 
-    @Size(max = 200)
+    @Size(max = 200,message = "Описание должно состоять не более чем из 200 символов")
     private String description;
 
     @EqualsAndHashCode.Include private LocalDate releaseDate;
 
-    @Positive
+    @Positive(message = "Продолжительность фильма должна быть больше нуля")
     @EqualsAndHashCode.Include private Integer duration;
 
-    @Positive
     private Integer rate;
 
     @JsonIgnore
-    private Set<Integer> likes = new TreeSet<>();
+    private Set<Integer> likes;
 
     private Mpa mpa;
     @JsonIgnore
-    private Set<Genre> genres = new TreeSet<>(Comparator.comparing(Genre::getId));
+    private Set<Genre> genres;
 
     public void addLike(Integer userId){
         likes.add(userId);

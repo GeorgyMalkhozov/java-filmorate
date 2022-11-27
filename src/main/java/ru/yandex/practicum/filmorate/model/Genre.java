@@ -14,7 +14,7 @@ public class Genre {
 
     private Integer id;
 
-    @NotBlank
+    @NotBlank(message = "Название жанра не должно быть пустым")
     @JsonIgnore
     private String name;
 
