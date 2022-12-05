@@ -2,46 +2,55 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.FailedReleaseDateException;
 import ru.yandex.practicum.filmorate.exceptions.IncorrectCountException;
 import ru.yandex.practicum.filmorate.exceptions.UnknownIdException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class FilmService{
-    @Qualifier("inMemoryFilmStorage")
     private final FilmStorage filmStorage;
+    private final LikeStorage likeStorage;
+
+    private final UserStorage userStorage;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage) {
+    public FilmService(FilmStorage filmStorage, LikeStorage likeStorage, UserStorage userStorage) {
         this.filmStorage = filmStorage;
+        this.likeStorage = likeStorage;
+        this.userStorage = userStorage;
     }
 
     public void addLike(Integer filmId, Integer userId) {
-       filmStorage.get(filmId).addLike(userId);
+        filmStorage.checkFilmId(filmId);
+        userStorage.checkUserId(userId);
+        if (likeStorage.isLikeExists(filmId,userId)) {
+            throw new UnknownIdException("У фильма уже есть лайк от этого пользователя");
+        }
+        likeStorage.create(filmId, userId);
     }
 
     public void deleteLike(Integer filmId, Integer userId) {
-        if (!filmStorage.get(filmId).getLikes().contains(userId)) {
+        if (!likeStorage.isLikeExists(filmId,userId)) {
             throw new UnknownIdException("У фильма нет лайка от пользователя");
         }
-        filmStorage.get(filmId).deleteLike(userId);
+        likeStorage.deleteLike(filmId,userId);
     }
 
     public List<Film> getPopularFilms(int count) {
         if (count <= 0) {
             throw new IncorrectCountException("Параметр count должен быть положительным.");
         }
-        return filmStorage.findAll().stream()
-                .sorted(this::compare)
-                .limit(count)
-                .collect(Collectors.toList());
+       return filmStorage.getPopularFilms(count);
     }
 
     public List<Film> findAll() {
@@ -49,18 +58,25 @@ public class FilmService{
     };
 
     public Film create(Film film) {
+        checkReleaseDate(film);
+        if (!filmStorage.isNewFilm(film)) {throw new ValidationException("Фильм уже есть в базе");}
         return filmStorage.create(film);
-    };
+    }
 
     public Film put(Film film) {
+        filmStorage.checkFilmId(film.getId());
+        checkReleaseDate(film);
         return filmStorage.put(film);
-    };
+    }
 
     public Film get(Integer id) {
+        filmStorage.checkFilmId(id);
         return filmStorage.get(id);
-    };
-    private int compare(Film film0, Film film1) {
-        Integer film1LikesCount = film1.getLikes().size();
-        return film1LikesCount.compareTo(film0.getLikes().size());
+    }
+
+    private void checkReleaseDate(Film film){
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895,12,28))) {
+            throw new FailedReleaseDateException("Дата релиза должна быть не ранее 28 декабря 1895 года");
+        }
     }
 }

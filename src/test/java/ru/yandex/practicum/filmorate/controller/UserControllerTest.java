@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -13,7 +15,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -21,6 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserControllerTest {
 
     @Autowired
@@ -31,13 +37,13 @@ class UserControllerTest {
     private static List testUserListForStatus400() {
         return List.of(
                 new User(1, "mail@mail.ru", "Login", "sdfs",
-                        LocalDate.of(2026, 2, 11)),
+                        LocalDate.of(2026, 2, 11), new HashSet<Integer>()),
                 new User(1,"mailmail.ru","Login","Name",
-                        LocalDate.of(1982,2,11)),
+                        LocalDate.of(1982,2,11), new HashSet<Integer>()),
                 new User(1,"","Login","Name",
-                        LocalDate.of(1982,2,11)),
+                        LocalDate.of(1982,2,11), new HashSet<Integer>()),
                 new User(1,"mail@mail.ru","","Name",
-                        LocalDate.of(1982,2,11))
+                        LocalDate.of(1982,2,11), new HashSet<Integer>())
         );
     }
 
@@ -55,7 +61,7 @@ class UserControllerTest {
     @Test
     public void addLoginWithSpaces() throws Exception {
         User user = new User(1,"mail@mail.ru","sdf sdfs","Name",
-                LocalDate.of(1982,2,11));
+                LocalDate.of(1982,2,11), Set.of(2));
         mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(user))
@@ -68,7 +74,7 @@ class UserControllerTest {
     public void LoginAsNameWhenNameIsEmpty() throws Exception {
 
         User user = new User(1,"mail@mail.ru","Login","",
-                LocalDate.of(1982,2,11));
+                LocalDate.of(1982,2,11), Set.of(2));
         mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(user))
@@ -79,9 +85,9 @@ class UserControllerTest {
     }
 
     @Test
-    public void addCorrectFilm() throws Exception {
-        User user = new User(2,"mail@mail.ru","Login","Name",
-                LocalDate.of(1982,2,11));
+    public void addCorrectUser() throws Exception {
+        User user = new User(1,"mail@mail.ru","Logi9n","Na9me",
+                LocalDate.of(1982,2,11), new HashSet<Integer>());
         mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(user))

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.yaml.snakeyaml.constructor.DuplicateKeyException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,38 +24,14 @@ public class ExceptionHandlerPlus {
     @ExceptionHandler({ValidationException.class})
     protected ResponseEntity<Object> handleValidationException(ValidationException exception, WebRequest request) {
         log.error(exception.getMessage());
-        ApiError apiError = new ApiError("Validation Exception", exception.getMessage());
+        ApiError apiError = new ApiError(exception.getClass().getSimpleName(), exception.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.NOT_ACCEPTABLE);
     }
 
-    @ExceptionHandler({FailedReleaseDateException.class})
-    protected ResponseEntity<Object> handleFailedReleaseDateException(FailedReleaseDateException exception,
-                                                                      WebRequest request) {
+    @ExceptionHandler({FailedReleaseDateException.class, IncorrectCountException.class})
+    protected ResponseEntity<Object> handleBadRequest(Exception exception, WebRequest request) {
         log.error(exception.getMessage());
-        ApiError apiError = new ApiError("FailedReleaseDate Exception", exception.getMessage());
-        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler({UnknownIdException.class})
-    protected ResponseEntity<Object> handleUnknownIdException(UnknownIdException exception, WebRequest request) {
-        log.error(exception.getMessage());
-        ApiError apiError = new ApiError("UnknownIdException Exception", exception.getMessage());
-        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler({IncorrectCountException.class})
-    protected ResponseEntity<Object> handleIncorrectCountException(IncorrectCountException exception,
-                                                                   WebRequest request) {
-        log.error(exception.getMessage());
-        ApiError apiError = new ApiError("IncorrectCountException Exception", exception.getMessage());
-        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler({MethodArgumentTypeMismatchException.class})
-    protected ResponseEntity<Object> handleMethodArgumentTypeMismatchException(
-            MethodArgumentTypeMismatchException exception, WebRequest request) {
-        log.error(exception.getMessage());
-        ApiError apiError = new ApiError("MethodArgumentTypeMismatchException", exception.getMessage());
+        ApiError apiError = new ApiError(exception.getClass().getSimpleName(), exception.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
@@ -66,9 +43,17 @@ public class ExceptionHandlerPlus {
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.toList());
 
-        ApiError apiError = new ApiError("Method Argument Not Valid", exception.getMessage(), errors);
+        ApiError apiError = new ApiError(exception.getClass().getSimpleName(), "", errors);
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler({UnknownIdException.class, SqlException.class})
+    protected ResponseEntity<Object> handleNotFound(Exception exception, WebRequest request) {
+        log.error(exception.getMessage());
+        ApiError apiError = new ApiError(exception.getClass().getSimpleName(), exception.getMessage());
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     protected @NonNull ResponseEntity<Object> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException exception,
@@ -83,7 +68,7 @@ public class ExceptionHandlerPlus {
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<Object> handleAllExceptions(Exception exception, WebRequest request) {
         log.error(exception.getMessage());
-        ApiError apiError = new ApiError(exception.getClass().toString(), exception.getMessage());
+        ApiError apiError = new ApiError(exception.getClass().getSimpleName(), exception.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -17,19 +17,21 @@ public class User {
 
     private Integer id;
 
-    @Email
-    @NotEmpty
+    @Email(message = "Некорректный формат email")
+    @NotEmpty(message = "Email должен быть заполнен")
     @EqualsAndHashCode.Include
     private String email;
 
-    @NotEmpty
+    @NotEmpty(message = "Логин не должен быть пустым")
     private String login;
+
     private String name;
 
-    @Past
+    @Past(message = "Дата рождения пользователя должна быть в прошлом")
     private LocalDate birthday;
+
     @JsonIgnore
-    private final Set<Integer> friends = new HashSet<>();
+    private Set<Integer> friends;
 
     public void addFriend(Integer userId){
         friends.add(userId);

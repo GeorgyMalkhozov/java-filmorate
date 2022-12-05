@@ -8,8 +8,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @AllArgsConstructor
 @Data
@@ -17,21 +16,27 @@ import java.util.Set;
 @Validated
 public class Film {
 
-    @EqualsAndHashCode.Exclude private Integer id;
+    private Integer id;
 
-    @NotBlank
-    private String name;
+    @NotBlank(message = "Название фильма не должно быть пустым")
+    @EqualsAndHashCode.Include private String name;
 
-    @Size(max = 200)
-    @EqualsAndHashCode.Exclude private String description;
+    @Size(max = 200,message = "Описание должно состоять не более чем из 200 символов")
+    private String description;
 
-    private LocalDate releaseDate;
+    @EqualsAndHashCode.Include private LocalDate releaseDate;
 
-    @Positive
-    private Integer duration;
+    @Positive(message = "Продолжительность фильма должна быть больше нуля")
+    @EqualsAndHashCode.Include private Integer duration;
+
+    private Integer rate;
 
     @JsonIgnore
-    private final Set<Integer> likes = new HashSet<>();
+    private Set<Integer> likes;
+
+    private Mpa mpa;
+    @JsonIgnore
+    private Set<Genre> genres;
 
     public void addLike(Integer userId){
         likes.add(userId);
@@ -39,5 +44,13 @@ public class Film {
 
     public void deleteLike(Integer userId){
         likes.remove(userId);
+    }
+
+    public void addGenre(Genre genre){
+        genres.add(genre);
+    }
+
+    public void deleteGenre(Genre genre){
+        genres.remove(genre);
     }
 }
